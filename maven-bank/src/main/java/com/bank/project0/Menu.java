@@ -1,5 +1,6 @@
 package com.bank.project0;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.IOException;
 import com.bank.project0.DOA.*;
@@ -8,6 +9,11 @@ public class Menu {
 
 	private Scanner s1 = new Scanner(System.in);
 	private String selectedChoice;
+	private BankDatabaseAccessObject bankDAO = new BankDatabaseAccessObject();
+	
+	public Menu() {
+		bankDAO.openConnection();
+	}
 	
 	public void printMenu() {
 		System.out.println("Who are you? \n" + "1: A customer\n" + "2: An employee\n" + "3: An admin\n" + "4: Exit application \n");
@@ -49,16 +55,33 @@ public class Menu {
 				
 			}
 			Application application = CreateCustomerApplication();
-			BankDatabaseAccessObject bankDAO = new BankDatabaseAccessObject();
-			bankDAO.openConnection();
 			int maxId = bankDAO.getMaxID("applications");
 			application.setAppID(maxId);
-			System.out.println("Are you looking to start a shared account with an already prexisting account?");
+			System.out.println("Are you looking to start a shared account with an already prexisting account? \n Enter Y for yes"
+					+ "; enter any other key to create a new account that is not prexisting");
 			selectedChoice = s1.nextLine().toLowerCase();
 			if(selectedChoice.equals("y")) {
-				sharedAccountNumber = (int)validateNumberInput("Please enter the account number asscociated to the account you "
-						+ "wish to be shared with, use numbers only");
-				bankDAO.checkIfAccountExists(sharedAccountNumber);	
+				boolean accountExists = false;
+				while(accountExists == false) {
+					sharedAccountNumber = (int)validateNumberInput("Please enter the account number asscociated to the account you "
+							+ "wish to be shared with, use numbers only");
+					accountExists = bankDAO.checkIfAccountExists(sharedAccountNumber);
+					if(accountExists == false) {
+						System.out.println("Do you wish to try again and enter the account number you wanted to share an account with\n"
+								+ "enter Y for yes; enter any other key to return back to main menu");
+						selectedChoice = s1.nextLine();
+						if(selectedChoice.equals("no")) {
+							return;
+						}
+					}
+					else {
+						application.setNewAccount("1");
+						application.setSharedAccountRequestedID(sharedAccountNumber);
+					}
+				}
+			}
+			else {
+				application.setNewAccount("0");
 			}
 			bankDAO.submitApplication(application);
 			
@@ -70,14 +93,47 @@ public class Menu {
 		do{
 			System.out.println("Do you want to see what pending applications there are?\n"
 					+ " Enter Y for yes\n"
-					+ " Enter anything to return to main menu");
+					+ " Enter N to instead see customer information\n"
+					+ " Enter anything else to return to main menu");
 			selectedChoice = s1.nextLine().toLowerCase();
 			if(selectedChoice.equals("y")) {
-				//uses Datbase object to connect to server to display pending applications in datbase
-				//give him the option to edit ones in table
+				ArrayList<Application> applications = bankDAO.getPendingApplications();
+				for(Application application: applications){
+					System.out.println("APPLICATION ID:: "+ application.getAppID() + " FIRST NAME:: " + application.getFirstName() + " LAST NAME:: " + 
+				    application.getLastName() + "ADDRESS:: " + application.getAddress() + "SOCIAL SECURITY #:: " + application.getSocialSecurityNum());
+				}
+				int applicationID;
+				System.out.print("Do you wish to approve or reject any of the applications? \n Enter Y for yes \n Enter any other key for return to main"
+						+ "menu ");
+				selectedChoice = s1.nextLine().toLowerCase();
+				while(selectedChoice.equals("y") && !applications.isEmpty()) {
+					applicationID = (int)validateNumberInput("Enter the application id of the application you wish to approve or reject");
+					try {
+						Application application;
+						application = applications.get(applicationID -1 );
+						System.out.println("Do you wish to approve to reject this application\n Enter Y for approve\n Enter anything else to reject");
+						if(selectedChoice.equals("Y")) {
+							
+						}
+						else {
+							
+						}
+						
+					}
+					catch(IndexOutOfBoundsException ex){
+						System.out.println("Sorry, but that number is not part of any of the application id values currently pending");
+					}
+					if(applications.isEmpty()) {
+						System.out.println("There are no more pending applications available");
+					}
+					else {
+						System.out.println("Do you wish to approve or reject any more of the applications?");
+						selectedChoice = s1.nextLine().toLowerCase();
+					}
 			}
-		}while(selectedChoice.equals("y"));
+		}
 					
+		}while(selectedChoice.equals("y"));
 	}
 	public void printAdminOptions() {
 		
@@ -107,15 +163,11 @@ public class Menu {
 		long value = 0;
 		System.out.println(stringMessage);
 		while(!s1.hasNextLong()) {
-			if(s1.hasNextLong()) {
-				value = s1.nextLong();
-			}
-			else {
-				System.out.println(stringMessage);
-				s1.nextLine();
-				
-			}			
+			System.out.println(stringMessage);
+			s1.nextLine();
+						
 		}
+		value = s1.nextLong();
 		return value;		
 	}
 	private String getSelectedChoice() {
