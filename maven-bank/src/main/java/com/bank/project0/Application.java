@@ -1,13 +1,13 @@
 package com.bank.project0;
 
-public class Application {
+public class Application  {
 	private String firstName;
 	private String lastName;
 	private String address;
 	private int socialSecurityNum;
 	private long phoneNumber;
 	private int appID;
-	private String newAccount;
+	private String newCustomerAccount;
 	private int sharedAccountRequestedID = 0;
 	private String accepted;
 	
@@ -33,7 +33,7 @@ public class Application {
 		this.socialSecurityNum = socialSecurityNum;
 		this.phoneNumber = phoneNum;
 		this.accepted = accepted;
-		this.newAccount = newAccount;
+		this.newCustomerAccount = newAccount;
 		this.sharedAccountRequestedID = sharedAccountRequestedId;
 		
 	}
@@ -47,11 +47,11 @@ public class Application {
 	public void setAppID(int appID) {
 		this.appID = appID;
 	}
-	public void setNewAccount(String val) {
-		newAccount = val;
+	public void setNewCustomerAccount(String val) {
+		newCustomerAccount = val;
 	}
-	public String getNewAccount() {
-		return newAccount;
+	public String getNewCustomerAccount() {
+		return newCustomerAccount;
 	}
 
 	public int getSharedAccountRequestedID() {
@@ -102,4 +102,5 @@ public class Application {
 		this.phoneNumber = phoneNumber;
 	}
 
+	
 }

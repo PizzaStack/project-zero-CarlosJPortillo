@@ -72,7 +72,7 @@ public class BankDatabaseAccessObject {
 					+ "2485337, '1'');");*/
 			sql = "insert into applications values (" +application.getAppID() + ", '" + application.getFirstName() + "', '" + application.getLastName()
 				  +"', '" + application.getAddress() + "', " + application.getSocialSecurityNum() + ", " + application.getPhoneNumber() + ", '" +
-					0 + "', '" + application.getNewAccount() + "', " +application.getSharedAccountRequestedID() + ");";
+					0 + "', '" + application.getNewCustomerAccount() + "', " +application.getSharedAccountRequestedID() + ");";
 			statement.execute(sql);
 			
 			
@@ -128,8 +128,18 @@ public class BankDatabaseAccessObject {
 		}
 		return false;
 	}
-	public void createAccount() {
-		
+	public void createCustomerAccount(Application application, int maxID, int accountMaxID) {
+		sql = "Insert into customers values (" + maxID +  ", '" + application.getFirstName() +"', '" + application.getLastName() +"', '" + application.getAddress() +
+				"', "+ application.getSocialSecurityNum() + ", " + application.getPhoneNumber() + ", " + accountMaxID + ", " + 0 + ");";
+		try {
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public void createBankAccount(int maxAccountID, int accountHolder1ID, int accountHolder2ID) {
+		sql = "Insert into accounts values (" + maxAccountID + ", " + accountHolder1ID + ", " + accountHolder2ID + ", " + 0 + ");";
 	}
 	
 	

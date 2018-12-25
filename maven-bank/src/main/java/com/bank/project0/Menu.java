@@ -75,13 +75,13 @@ public class Menu {
 						}
 					}
 					else {
-						application.setNewAccount("1");
+						application.setNewCustomerAccount("0");
 						application.setSharedAccountRequestedID(sharedAccountNumber);
 					}
 				}
 			}
 			else {
-				application.setNewAccount("0");
+				application.setNewCustomerAccount("1");
 			}
 			bankDAO.submitApplication(application);
 			
@@ -108,21 +108,32 @@ public class Menu {
 				selectedChoice = s1.nextLine().toLowerCase();
 				while(selectedChoice.equals("y") && !applications.isEmpty()) {
 					applicationID = (int)validateNumberInput("Enter the application id of the application you wish to approve or reject");
-					try {
-						Application application;
-						application = applications.get(applicationID -1 );
+					s1.nextLine();
+					Application applicationChosen = null;
+					for(Application application: applications) {
+						if(application.getAppID() == applicationID) {
+							applicationChosen = application;
+							break;
+						}
+					}
+					if(applicationChosen!= null) {
 						System.out.println("Do you wish to approve to reject this application\n Enter Y for approve\n Enter anything else to reject");
-						if(selectedChoice.equals("Y")) {
-							
+						selectedChoice = s1.nextLine().toLowerCase();
+						int accountMaxID = bankDAO.getMaxID("accounts");
+						if(selectedChoice.equals("y")) {
+							if(applicationChosen.getNewCustomerAccount().equals("t")) {
+								int maxCustomerID = bankDAO.getMaxID("customers");
+								bankDAO.createCustomerAccount(applicationChosen, maxCustomerID, accountMaxID);
+								bankDAO.createBankAccount(accountMaxID, maxCustomerID, 0);		
+							}
 						}
 						else {
 							
 						}
+					}
+					else {
 						
-					}
-					catch(IndexOutOfBoundsException ex){
-						System.out.println("Sorry, but that number is not part of any of the application id values currently pending");
-					}
+					}	
 					if(applications.isEmpty()) {
 						System.out.println("There are no more pending applications available");
 					}
