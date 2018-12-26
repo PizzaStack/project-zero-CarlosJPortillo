@@ -98,50 +98,67 @@ public class Menu {
 			selectedChoice = s1.nextLine().toLowerCase();
 			if(selectedChoice.equals("y")) {
 				ArrayList<Application> applications = bankDAO.getPendingApplications();
-				for(Application application: applications){
-					System.out.println("APPLICATION ID:: "+ application.getAppID() + " FIRST NAME:: " + application.getFirstName() + " LAST NAME:: " + 
-				    application.getLastName() + "ADDRESS:: " + application.getAddress() + "SOCIAL SECURITY #:: " + application.getSocialSecurityNum());
+				if(applications.size() == 0) {
+					System.out.println("There are no currently no pending applications");
 				}
-				int applicationID;
-				System.out.print("Do you wish to approve or reject any of the applications? \n Enter Y for yes \n Enter any other key for return to main"
-						+ "menu ");
-				selectedChoice = s1.nextLine().toLowerCase();
-				while(selectedChoice.equals("y") && !applications.isEmpty()) {
-					applicationID = (int)validateNumberInput("Enter the application id of the application you wish to approve or reject");
-					s1.nextLine();
-					Application applicationChosen = null;
-					for(Application application: applications) {
-						if(application.getAppID() == applicationID) {
-							applicationChosen = application;
-							break;
-						}
+				else {
+					for(Application application: applications){
+						System.out.println("APPLICATION ID:: "+ application.getAppID() + " FIRST NAME:: " + application.getFirstName() + " LAST NAME:: " + 
+					    application.getLastName() + "ADDRESS:: " + application.getAddress() + "SOCIAL SECURITY #:: " + application.getSocialSecurityNum());
 					}
-					if(applicationChosen!= null) {
-						System.out.println("Do you wish to approve to reject this application\n Enter Y for approve\n Enter anything else to reject");
-						selectedChoice = s1.nextLine().toLowerCase();
-						int accountMaxID = bankDAO.getMaxID("accounts");
-						if(selectedChoice.equals("y")) {
-							if(applicationChosen.getNewCustomerAccount().equals("t")) {
-								int maxCustomerID = bankDAO.getMaxID("customers");
-								bankDAO.createCustomerAccount(applicationChosen, maxCustomerID, accountMaxID);
-								bankDAO.createBankAccount(accountMaxID, maxCustomerID, 0);		
+					int applicationID;
+					System.out.print("Do you wish to approve or reject any of the applications? \n Enter Y for yes \n Enter any other key for return to main"
+							+ "menu ");
+					selectedChoice = s1.nextLine().toLowerCase();
+					while(selectedChoice.equals("y") && !applications.isEmpty()) {
+						applicationID = (int)validateNumberInput("Enter the application id of the application you wish to approve or reject");
+						s1.nextLine();
+						Application applicationChosen = null;
+						for(Application application: applications) {
+							if(application.getAppID() == applicationID) {
+								applicationChosen = application;
+								break;
+							}
+						}
+						if(applicationChosen!= null) {
+							System.out.println("Do you wish to approve to reject this application\n Enter Y for approve\n Enter anything else to reject");
+							selectedChoice = s1.nextLine().toLowerCase();
+							int accountMaxID = bankDAO.getMaxID("accounts");
+							if(selectedChoice.equals("y")) {
+								if(applicationChosen.getNewCustomerAccount().equals("t")) {
+									int maxCustomerID = bankDAO.getMaxID("customers");
+									bankDAO.createCustomerAccount(applicationChosen, maxCustomerID, accountMaxID);
+									bankDAO.createBankAccount(accountMaxID, maxCustomerID, 0);
+									applications.remove(applicationChosen);
+								}
+							}
+							else {
+								
 							}
 						}
 						else {
 							
+						}	
+						if(applications.isEmpty()) {
+							System.out.println("There are no more pending applications available");
+						}
+						else {
+							System.out.println("Do you wish to approve or reject any more of the applications?");
+							selectedChoice = s1.nextLine().toLowerCase();
 						}
 					}
-					else {
-						
-					}	
-					if(applications.isEmpty()) {
-						System.out.println("There are no more pending applications available");
-					}
-					else {
-						System.out.println("Do you wish to approve or reject any more of the applications?");
-						selectedChoice = s1.nextLine().toLowerCase();
-					}
+				}
+				
+		}else if(selectedChoice.equals("n")) {
+			int customerID = (int)validateNumberInput("Please enter the customer's id number with whom you wish to see details about");
+			Customer customer = bankDAO.getCustomerInformation(customerID);
+			if(customer.equals(null)) {
+				System.out.println("No such customer exists with that id number!");
 			}
+			else {
+				
+			}
+			
 		}
 					
 		}while(selectedChoice.equals("y"));

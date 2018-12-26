@@ -12,7 +12,9 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.bank.project0.Account;
 import com.bank.project0.Application;
+import com.bank.project0.Customer;
 
 import java.sql.ResultSet;
 
@@ -128,6 +130,53 @@ public class BankDatabaseAccessObject {
 		}
 		return false;
 	}
+	public Customer getCustomerInformation(int customerID) {
+		sql = "Select * from customers where customer_id = " + customerID + ";";
+		try {
+			resultSet = statement.executeQuery(sql);
+			int count = 0;
+			while(resultSet.next()) {
+				count++;
+				Customer customer;
+				int accountNumber1 = resultSet.getInt(7);
+				int accountNumber2 = resultSet.getInt(8);
+				customer = new Customer(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4),
+						resultSet.getInt(5), resultSet.getLong(6), null, null);
+				if(accountNumber1 == 0 && accountNumber2 == 0) {
+					break;
+				}
+				else {
+					Account account1 = null;
+					Account account2 = null;
+					ResultSet accountResultSet = null;
+					if(accountNumber1!= 0) {
+						sql = "Select * from accounts where account_id = " + resultSet.getInt(7) + ";";
+						accountResultSet = statement.executeQuery(sql);
+						accountResultSet.next();
+						account1 = new Account(accountResultSet.getInt(1), accountResultSet.getInt(2), accountResultSet.getInt(3), 
+								accountResultSet.getInt(4));
+					}
+					if(accountNumber2!= 0) {
+						sql = "Select * from accounts where account_id = " + resultSet.getInt(8) + ";";
+						accountResultSet = statement.executeQuery(sql);
+						account2 = new Account(accountResultSet.getInt(1), accountResultSet.getInt(2), accountResultSet.getInt(3), 
+								accountResultSet.getInt(4));
+					}
+					accountResultSet.close();
+					customer.setAccount1(account1);
+					customer.setAccount2(account2);
+					
+				}
+				
+				return customer;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	public void createCustomerAccount(Application application, int maxID, int accountMaxID) {
 		sql = "Insert into customers values (" + maxID +  ", '" + application.getFirstName() +"', '" + application.getLastName() +"', '" + application.getAddress() +
 				"', "+ application.getSocialSecurityNum() + ", " + application.getPhoneNumber() + ", " + accountMaxID + ", " + 0 + ");";
@@ -140,6 +189,13 @@ public class BankDatabaseAccessObject {
 	}
 	public void createBankAccount(int maxAccountID, int accountHolder1ID, int accountHolder2ID) {
 		sql = "Insert into accounts values (" + maxAccountID + ", " + accountHolder1ID + ", " + accountHolder2ID + ", " + 0 + ");";
+		
+		try {
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	
