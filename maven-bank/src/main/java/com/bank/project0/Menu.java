@@ -26,8 +26,25 @@ public class Menu {
 				printCustomerOptions();
 				break;
 			case "2":
-				System.out.println();
-				printEmployeeOptions();
+				Employee employee;
+				try {
+					int id = (int)validateNumberInput("Please enter your employee ID number?");
+					System.out.println("Please enter the password associated with this ID number");
+					s1.nextLine();
+					String password = s1.nextLine();
+					employee = bankDAO.getEmployeeInformation(id, password);
+					if(employee == null) {
+						System.out.println("Sorry but that combination of ID value and password is wrong!");
+					}
+					else {
+						printEmployeeOptions(employee);
+					}
+				}
+				catch(ClassCastException ex){
+					System.out.println("Sorry but that combination of ID value and password is wrong!");
+				}
+				
+			
 				break;
 			case "3":
 				System.out.println();
@@ -55,7 +72,7 @@ public class Menu {
 				
 			}
 			Application application = CreateCustomerApplication();
-			int maxId = bankDAO.getMaxID("applications");
+			int maxId = bankDAO.getMaxID("applications", "application_id");
 			application.setAppID(maxId);
 			System.out.println("Are you looking to start a shared account with an already prexisting account? \n Enter Y for yes"
 					+ "; enter any other key to create a new account that is not prexisting");
@@ -65,7 +82,9 @@ public class Menu {
 				while(accountExists == false) {
 					sharedAccountNumber = (int)validateNumberInput("Please enter the account number asscociated to the account you "
 							+ "wish to be shared with, use numbers only");
+					s1.nextLine();
 					accountExists = bankDAO.checkIfAccountExists(sharedAccountNumber);
+					
 					if(accountExists == false) {
 						System.out.println("Do you wish to try again and enter the account number you wanted to share an account with\n"
 								+ "enter Y for yes; enter any other key to return back to main menu");
@@ -84,12 +103,26 @@ public class Menu {
 				application.setNewCustomerAccount("1");
 			}
 			bankDAO.submitApplication(application);
+			System.out.println("Application has been submitted to the bank");
 			
+		}
+		else if(selectedChoice == "n") {
+			try {
+				int customerID = (int)validateNumberInput("Please enter your customer id number");
+				int socialSecurityNumber = (int)validateNumberInput("Please enter your social security number");
+				if(bankDAO.validateUser(customerID, socialSecurityNumber)) {
+					
+				}
+				
+			}
+			catch(ClassCastException ex) {
+				System.out.println("Sorry but not such Id or social security combination existis");
+			}
 		}
 		
 		
 }
-	public void printEmployeeOptions() {
+	public void printEmployeeOptions(Employee employee) {
 		do{
 			System.out.println("Do you want to see what pending applications there are?\n"
 					+ " Enter Y for yes\n"
@@ -123,12 +156,18 @@ public class Menu {
 						if(applicationChosen!= null) {
 							System.out.println("Do you wish to approve to reject this application\n Enter Y for approve\n Enter anything else to reject");
 							selectedChoice = s1.nextLine().toLowerCase();
-							int accountMaxID = bankDAO.getMaxID("accounts");
+							int accountMaxID = bankDAO.getMaxID("accounts", "account_id");
 							if(selectedChoice.equals("y")) {
 								if(applicationChosen.getNewCustomerAccount().equals("t")) {
-									int maxCustomerID = bankDAO.getMaxID("customers");
-									bankDAO.createCustomerAccount(applicationChosen, maxCustomerID, accountMaxID);
-									bankDAO.createBankAccount(accountMaxID, maxCustomerID, 0);
+									int maxCustomerID = bankDAO.getMaxID("customers", "customer_id");
+									if(applicationChosen.getSharedAccountRequestedID() == 0) {
+										bankDAO.createCustomerAccount(applicationChosen, maxCustomerID, accountMaxID);
+										bankDAO.createBankAccount(accountMaxID, maxCustomerID, 0);
+									}
+									else {
+										bankDAO.createCustomerAccount(applicationChosen, maxCustomerID, applicationChosen.getSharedAccountRequestedID());
+										bankDAO.addAccountToCustomer(applicationChosen.getSharedAccountRequestedID(), maxCustomerID);						
+									}
 									applications.remove(applicationChosen);
 								}
 							}
@@ -156,11 +195,20 @@ public class Menu {
 				System.out.println("No such customer exists with that id number!");
 			}
 			else {
-				
+				System.out.println("FIRST NAME: " + customer.getFirstName() + " LAST NAME: " + customer.getLastName() + " ADDRESS: " + customer.getAddress()+
+						" SOCIAL SECURITY #: " + customer.getSocialSecurityNum() + " PHONE NUMBER: " + customer.getPhoneNumber() );
+				if(customer.getAccount1() == null && customer.getAccount2() == null) {
+					System.out.println("**NO ACTIVE ACCOUNTS**");
+				}
+				else {
+					System.out.println("ACTIVE ACCOUNTS::: ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + customer.getAccount1().getBalance());
+					if(customer.getAccount2()!= null) {
+						System.out.println("\t \t   ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + customer.getAccount1().getBalance());
+					}
+				}			
 			}
-			
-		}
 					
+		}
 		}while(selectedChoice.equals("y"));
 	}
 	public void printAdminOptions() {
@@ -182,6 +230,7 @@ public class Menu {
 		socialSecurityNum = (int) validateNumberInput("Please enter your social security number with no dashes or spaces");
 		s1.nextLine();
 		phoneNumber = validateNumberInput("Please enter your phone number with no dashes or spaces");
+		s1.nextLine();
 
 	//1phoneNum = s1.nextInt();
 		

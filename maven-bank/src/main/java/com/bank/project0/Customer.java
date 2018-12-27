@@ -6,18 +6,15 @@ public class Customer extends Person implements Depositable, Withdrawable {
 	private Account account1;
 	private Account account2;
 	private int totalActiveAccounts;
-	private String firstName;
-	private String lastName;
 	private String address;
 	private int socialSecurityNum;
 	private long phoneNumber;
-	private int id;
 	
 	public Customer(int id, String firstName, String lastName, String address, int socialSecurityNumber, long phoneNumber, Account account1,
 			Account account2) {
-		this.setId(id);
-		this.firstName = firstName;
-		this.lastName = lastName;
+		setId(id);
+		setFirstName(firstName);
+		setLastName(lastName);
 		this.address = address;
 		this.socialSecurityNum = socialSecurityNumber;
 		this.phoneNumber = phoneNumber;
@@ -25,7 +22,6 @@ public class Customer extends Person implements Depositable, Withdrawable {
 		this.account2 = account2;
 		
 	}
-	
 
 	public void deposit() {
 		// TODO Auto-generated method stub
@@ -65,25 +61,6 @@ public class Customer extends Person implements Depositable, Withdrawable {
 	}
 
 
-	public String getFirstName() {
-		return firstName;
-	}
-
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-
-	public String getLastName() {
-		return lastName;
-	}
-
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
 
 	public long getPhoneNumber() {
 		return phoneNumber;
@@ -112,16 +89,6 @@ public class Customer extends Person implements Depositable, Withdrawable {
 
 	public void setAccount2(Account account2) {
 		this.account2 = account2;
-	}
-
-
-	public int getId() {
-		return id;
-	}
-
-
-	public void setId(int id) {
-		this.id = id;
 	}
 
 

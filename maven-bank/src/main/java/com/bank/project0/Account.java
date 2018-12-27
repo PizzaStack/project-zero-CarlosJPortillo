@@ -5,9 +5,9 @@ public class Account {
 	private int accountID;
 	private int accountHolder1;
 	private int accountHolder2;
-	private int balance;
+	private float balance;
 	
-	public Account(int accountID, int accountHolder1, int accountHolder2, int balance) {
+	public Account(int accountID, float balance, int accountHolder1, int accountHolder2) {
 		this.accountID = accountID;
 		this.accountHolder1 = accountHolder1;
 		this.accountHolder2 = accountHolder2;
@@ -32,10 +32,10 @@ public class Account {
 	public void setAccountHolder2(int accountHolder2) {
 		this.accountHolder2 = accountHolder2;
 	}
-	public int getBalance() {
+	public float getBalance() {
 		return balance;
 	}
-	public void setBalance(int balance) {
+	public void setBalance(float balance) {
 		this.balance = balance;
 	}
 
