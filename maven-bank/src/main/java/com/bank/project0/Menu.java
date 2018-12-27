@@ -1,6 +1,7 @@
 package com.bank.project0;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.io.IOException;
 import com.bank.project0.DOA.*;
@@ -47,6 +48,7 @@ public class Menu {
 			
 				break;
 			case "3":
+				validateMoneyValue();
 				System.out.println();
 				printAdminOptions();
 				break;
@@ -106,12 +108,14 @@ public class Menu {
 			System.out.println("Application has been submitted to the bank");
 			
 		}
-		else if(selectedChoice == "n") {
+		else if(selectedChoice.equals("n")) {
 			try {
 				int customerID = (int)validateNumberInput("Please enter your customer id number");
 				int socialSecurityNumber = (int)validateNumberInput("Please enter your social security number");
 				if(bankDAO.validateUser(customerID, socialSecurityNumber)) {
-					
+					Customer customer = bankDAO.getCustomerInformation(customerID);
+					printCustomerInformation(customer);
+					printCustomerAccountOptions(customer);
 				}
 				
 			}
@@ -121,7 +125,7 @@ public class Menu {
 		}
 		
 		
-}
+	}
 	public void printEmployeeOptions(Employee employee) {
 		do{
 			System.out.println("Do you want to see what pending applications there are?\n"
@@ -195,17 +199,7 @@ public class Menu {
 				System.out.println("No such customer exists with that id number!");
 			}
 			else {
-				System.out.println("FIRST NAME: " + customer.getFirstName() + " LAST NAME: " + customer.getLastName() + " ADDRESS: " + customer.getAddress()+
-						" SOCIAL SECURITY #: " + customer.getSocialSecurityNum() + " PHONE NUMBER: " + customer.getPhoneNumber() );
-				if(customer.getAccount1() == null && customer.getAccount2() == null) {
-					System.out.println("**NO ACTIVE ACCOUNTS**");
-				}
-				else {
-					System.out.println("ACTIVE ACCOUNTS::: ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + customer.getAccount1().getBalance());
-					if(customer.getAccount2()!= null) {
-						System.out.println("\t \t   ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + customer.getAccount1().getBalance());
-					}
-				}			
+				printCustomerInformation(customer);
 			}
 					
 		}
@@ -247,8 +241,115 @@ public class Menu {
 		value = s1.nextLong();
 		return value;		
 	}
+	public void printCustomerInformation(Customer customer) {
+		System.out.println("FIRST NAME: " + customer.getFirstName() + " LAST NAME: " + customer.getLastName() + " ADDRESS: " + customer.getAddress()+
+				" SOCIAL SECURITY #: " + customer.getSocialSecurityNum() + " PHONE NUMBER: " + customer.getPhoneNumber() );
+		if(customer.getAccount1() == null && customer.getAccount2() == null) {
+			System.out.println("**NO ACTIVE ACCOUNTS**");
+		}
+		else {
+			System.out.println("ACTIVE ACCOUNTS::: ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + customer.getAccount1().getBalance());
+			if(customer.getAccount2()!= null) {
+				System.out.println("\t \t   ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + customer.getAccount1().getBalance());
+			}
+		}	
+		
+	}
+	public void printCustomerAccountOptions(Customer customer) {
+		while(true) {
+			float dollarAmount = 0.00f;
+			String accountChecker = "";
+			System.out.println("Enter an option \n D: Deposit Money \n W: Withdraw Money \n T: Transfer Money \n C: Create New Account");
+			selectedChoice = s1.nextLine().toLowerCase();
+			switch(selectedChoice) {
+			case "d":
+				accountChecker = displayAccountsAvailable(customer);
+				if(!accountChecker.equals("0 accounts")) {
+					if(accountChecker.equals("1 account")) {
+						depositDisplay(customer.getAccount1().getAccountID(), "You despoited " + dollarAmount + " into your first account", dollarAmount);
+					}
+					else if(accountChecker.equals("2 accounts")) {
+						chooseBetweenAccounts();
+						if(selectedChoice.equals("1")) {
+							depositDisplay(customer.getAccount1().getAccountID(), "You despoited " + dollarAmount + " into your first account", dollarAmount);
+						}
+						else if(selectedChoice.equals("2")) {
+							depositDisplay(customer.getAccount2().getAccountID(), "You despoited " + dollarAmount + " into your first account", dollarAmount);
+						}		
+					}
+				}
+				break;
+			case "w":
+					accountChecker = displayAccountsAvailable(customer);
+					if(!accountChecker.equals("0 accounts")) {
+						if(accountChecker.equals("1 accont")) {
+							
+						}
+					}
+					
+				break;
+			case "t":
+				break;
+			case "c":
+				break;
+			
+			}
+			System.out.println("Do you wish to exit this menu screen? \n Enter Y to exit and return back to the previous screen");
+		}	
+	}
+	public float validateMoneyValue() {
+		float myFloat;
+		while (true) {
+	        System.out.print("Enter a float: ");
+	        try {
+	            myFloat = s1.nextFloat();
+	            if (myFloat < 0) {
+	              System.out.println("Cannot have negative numbers!");
+	            }
+	            else {
+	            	break;
+	            }
+	        } catch (InputMismatchException ime) {
+	            System.out.println(ime.toString());
+	            s1.next(); // Flush the buffer from all data
+	        }
+	    }
+		return myFloat;
+	}
+	public String displayAccountsAvailable(Customer customer) {
+		String s1 = "";
+		if(customer.getAccount1() == null && customer.getAccount2() == null){
+			System.out.println("There have no accounts that you can work with this customer account!");
+			s1 = "0 accounts";
+		}
+		else if(customer.getAccount1()!= null && customer.getAccount2() == null) {
+			s1 = "1 account";
+		}
+		else if(customer.getAccount1()!= null && customer.getAccount2()!= null) {
+			System.out.println("Choose from either account 1 or 2 to work with");
+			s1 = "2 accounts";
+		}
+		return s1;
+		
+	}
+	public void chooseBetweenAccounts() {
+		while(selectedChoice.equals("1") || selectedChoice.equals("2")) {
+			selectedChoice = s1.nextLine();
+			
+		}
+	}
+	public void depositDisplay(int accountID, String depositMessage, float dollarAmount) {
+		dollarAmount = validateMoneyValue();
+		bankDAO.deposit(dollarAmount, accountID);
+		System.out.println("You despoited " + dollarAmount + " into your first account");
+	}
+	public void withDrawDisplay(int accountID, String withDrawMessage, float dollarAmount) {
+		
+	}
+	
 	private String getSelectedChoice() {
 		return this.selectedChoice;
 	}
+	
 
 }

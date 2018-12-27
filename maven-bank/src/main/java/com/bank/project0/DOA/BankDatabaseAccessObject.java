@@ -238,7 +238,7 @@ public class BankDatabaseAccessObject {
 	}
 
 	public boolean validateUser(int customerID, int socialSecurityNumber ) {
-		sql = "Select from customers where customerID = " + customerID + " and socialSecurity = " + socialSecurityNumber + ";";
+		sql = "Select * from customers where customer_id = " + customerID + " and socialnumber = " + socialSecurityNumber + ";";
 		try {
 			resultSet = statement.executeQuery(sql);
 			if(resultSet.next()) {
@@ -250,6 +250,15 @@ public class BankDatabaseAccessObject {
 		}
 		
 		return false;
+	}
+	public void deposit(float dollarAmount, int id) {
+		sql = "update accounts set balance = balance + " + dollarAmount + " where account_id =  "  + id + ";";
+		try {
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 
