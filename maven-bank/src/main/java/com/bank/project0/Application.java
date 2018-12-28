@@ -13,13 +13,14 @@ public class Application  {
 	
 	
 	public Application(String firstName, String lastName, String address, int socialSecurityNum,
-				long phoneNum){
+				long phoneNum, String newCustomerAccount){
 		
 		this.setFirstName(firstName);
 		this.setLastName(lastName);
 		this.setAddress(address);
 		this.setSocialSecurityNum(socialSecurityNum);
 		this.setPhoneNumber(phoneNum);
+		this.newCustomerAccount = newCustomerAccount;
 		
 		
 		

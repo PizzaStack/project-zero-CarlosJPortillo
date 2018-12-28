@@ -1,7 +1,6 @@
 package com.bank.project0;
-import java.util.ArrayList;
 
-public class Customer extends Person implements Depositable, Withdrawable {
+public class Customer extends Person {
 
 	private Account account1;
 	private Account account2;
@@ -20,19 +19,6 @@ public class Customer extends Person implements Depositable, Withdrawable {
 		this.phoneNumber = phoneNumber;
 		this.account1 = account1;
 		this.account2 = account2;
-		
-	}
-
-	public void deposit() {
-		// TODO Auto-generated method stub
-		
-		
-		
-	}
-
-
-	public void withdraw() {
-		// TODO Auto-generated method stub
 		
 	}
 

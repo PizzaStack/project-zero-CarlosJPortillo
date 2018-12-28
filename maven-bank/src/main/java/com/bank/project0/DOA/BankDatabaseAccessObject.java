@@ -1,6 +1,7 @@
 package com.bank.project0.DOA;
 
 import java.io.File;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -8,7 +9,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -62,33 +62,33 @@ public class BankDatabaseAccessObject {
 		try {
 			connection = DriverManager.getConnection(url, userName, passWord);
 			statement = connection.createStatement();
+			logger.debug("Connection made to database");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			logger.error("Failed to connect to database");
 		}
 	}
 	public void submitApplication(Application application) {
 		
 		try {
-			/*statement.executeUpdate("insert into applications values ( 1, 'Carlos', 'Portillo', "
-					+ "'3737 N Calle Cancion', 400125454, "
-					+ "2485337, '1'');");*/
 			sql = "insert into applications values (" +application.getAppID() + ", '" + application.getFirstName() + "', '" + application.getLastName()
 				  +"', '" + application.getAddress() + "', " + application.getSocialSecurityNum() + ", " + application.getPhoneNumber() + ", '" +
 					0 + "', '" + application.getNewCustomerAccount() + "', " +application.getSharedAccountRequestedID() + ");";
 			statement.execute(sql);
-			
+			logger.debug("application was submitted");
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			logger.error("failed to submited application to database");
 		}
 		
 	}
 	public ArrayList<Application> getPendingApplications() {
 		
 		ArrayList<Application> applications = new ArrayList<Application>();
-		sql = "SELECT * FROM applications where accepted = '0';";
+		sql = "SELECT * FROM applications where accepted = '0' order by application_id;";
 		try {
 			resultSet = statement.executeQuery(sql);
 			while(resultSet.next()) {
@@ -134,7 +134,7 @@ public class BankDatabaseAccessObject {
 		return false;
 	}
 	public Customer getCustomerInformation(int customerID) {
-		sql = "Select * from customers where customer_id = " + customerID + ";";
+		sql = "Select * from customers where customer_id = " + customerID + " order by customer_id;";
 		try {
 			resultSet = statement.executeQuery(sql);
 			int count = 0;
@@ -145,6 +145,7 @@ public class BankDatabaseAccessObject {
 				int accountNumber2 = resultSet.getInt(8);
 				customer = new Customer(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4),
 						resultSet.getInt(5), resultSet.getLong(6), null, null);
+				resultSet.close();
 				if(accountNumber1 == 0 && accountNumber2 == 0) {
 					break;
 				}
@@ -153,15 +154,19 @@ public class BankDatabaseAccessObject {
 					Account account2 = null;
 					ResultSet accountResultSet = null;
 					if(accountNumber1!= 0) {
-						sql = "Select * from accounts where account_id = " + resultSet.getInt(7) + ";";
+						sql = "Select * from accounts where account_id = " + accountNumber1 + ";";
 						accountResultSet = statement.executeQuery(sql);
 						accountResultSet.next();
 						account1 = new Account(accountResultSet.getInt(1), accountResultSet.getFloat(2), accountResultSet.getInt(3), 
 								accountResultSet.getInt(4));
+						accountResultSet.close();
+						accountResultSet = null;
 					}
 					if(accountNumber2!= 0) {
-						sql = "Select * from accounts where account_id = " + resultSet.getInt(8) + ";";
+						
+						sql = "Select * from accounts where account_id = " + accountNumber2 + ";";
 						accountResultSet = statement.executeQuery(sql);
+						accountResultSet.next();
 						account2 = new Account(accountResultSet.getInt(1), accountResultSet.getFloat(2), accountResultSet.getInt(3), 
 								accountResultSet.getInt(4));
 					}
@@ -219,17 +224,20 @@ public class BankDatabaseAccessObject {
 	public void closeConnection() {
 		try {
 			connection.close();
+			logger.debug("connection closed successfully");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			logger.error("failed to close connection");
 		}
 	}
 
-	public void addAccountToCustomer(int sharedAccountRequestedID, int newAccountHolder) {
+	public void addCustomerToAccount(int sharedAccountRequestedID, int newAccountHolder) {
 		// TODO Auto-generated method stub
 		sql = "Update accounts SET accountholder2 = " + newAccountHolder  + " where account_id = " + sharedAccountRequestedID + ";";
 		try {
 			statement.executeUpdate(sql);
+			logger.debug("Added new account holder to account: " + sharedAccountRequestedID);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -255,11 +263,61 @@ public class BankDatabaseAccessObject {
 		sql = "update accounts set balance = balance + " + dollarAmount + " where account_id =  "  + id + ";";
 		try {
 			statement.executeUpdate(sql);
+			logger.debug("deposited " + dollarAmount + " into account: " + id);
 		} catch (SQLException e) {
+			logger.error("failed to deposit money into account: " + id);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	public void withdraw(float dollarAmount, int id) {
+		sql = "update accounts set balance = " + dollarAmount + " where account_id = " + id + ";";
+		try {
+			statement.executeUpdate(sql);
+			logger.debug("withdrew money into account");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	public int getCustomerId(int socialSecurityNum) {
+		sql = "select customer_id from customers where socialnumber = " + socialSecurityNum + ";";
+		try {
+			resultSet = statement.executeQuery(sql);
+			resultSet.next();
+			return resultSet.getInt(1);
+		} catch (SQLException e) {
+			logger.error("Failed to retrieve customer ID :" + socialSecurityNum);
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public void addAccountToCustomer(int customerID, int accountMaxID) {
+		sql = "update customers set account2_id = " + accountMaxID + "where customer_id = " + customerID + ";";
+		try {
+			statement.executeUpdate(sql);
+			logger.debug("Added a bank account to customer: " + customerID);
+		} catch (SQLException e) {
+			logger.error("Failed to bank account to customer: " + customerID);
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	public void callableDeleteApplication(int applicationID) {
+		try {
+			CallableStatement stmt = connection.prepareCall("{call deleteapplication(?)}");
+			stmt.setInt(1, applicationID);
+			stmt.execute();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 }
