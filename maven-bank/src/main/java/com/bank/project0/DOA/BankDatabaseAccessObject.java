@@ -1,12 +1,16 @@
 package com.bank.project0.DOA;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
@@ -22,17 +26,32 @@ import java.sql.ResultSet;
 
 public class BankDatabaseAccessObject {
 	
+	private Properties properties = new Properties();
+
+	
 	private static Logger logger = Logger.getLogger(BankDatabaseAccessObject.class);
 	private Connection connection;
 	private Statement statement;
 	private ResultSet resultSet;
-	private String url = "jdbc:postgresql://cjportillo89.cwrr2qklkyum.us-east-2.rds.amazonaws.com:"
-			+ "5432/cjportillo89";
-	private String userName = "cjportillo89";
-	private String passWord = "augmaticdisport22-";
+	private String url;
+	private String userName;
+	private String passWord;
 	private String sql;
 	
 	public BankDatabaseAccessObject() {
+		try {
+			properties.load(new FileInputStream("connection.properties"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		url = properties.getProperty("url");
+		userName = properties.getProperty("username");
+		passWord = properties.getProperty("password");
+		
 		PropertyConfigurator.configure(System.getProperty("user.dir") + File.separator +
 				"log4j.properties");
 	}
@@ -275,7 +294,7 @@ public class BankDatabaseAccessObject {
 		sql = "update accounts set balance = " + dollarAmount + " where account_id = " + id + ";";
 		try {
 			statement.executeUpdate(sql);
-			logger.debug("withdrew money into account");
+			logger.debug("withdrew $" + dollarAmount + " from account: " + id);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

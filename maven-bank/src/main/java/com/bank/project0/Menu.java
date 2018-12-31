@@ -224,15 +224,18 @@ public class Menu {
 		return value;		
 	}
 	public void printCustomerInformation(Customer customer) {
+		
 		System.out.println("FIRST NAME: " + customer.getFirstName() + " LAST NAME: " + customer.getLastName() + " ADDRESS: " + customer.getAddress()+
 				" SOCIAL SECURITY #: " + customer.getSocialSecurityNum() + " PHONE NUMBER: " + customer.getPhoneNumber() );
 		if(customer.getAccount1() == null && customer.getAccount2() == null) {
 			System.out.println("**NO ACTIVE ACCOUNTS**");
 		}
 		else {
-			System.out.println("ACTIVE ACCOUNTS::: ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + customer.getAccount1().getBalance());
+			String balanceString1 = String.format("%.2f", customer.getAccount1().getBalance());
+			System.out.println("ACTIVE ACCOUNTS::: ACCOUNT ID:" + customer.getAccount1().getAccountID() + " BALANCE: " + balanceString1);
 			if(customer.getAccount2()!= null) {
-				System.out.println("\t \t   ACCOUNT ID:" + customer.getAccount2().getAccountID() + " BALANCE: " + customer.getAccount2().getBalance());
+				String balanceString2 = String.format("%.2f", customer.getAccount2().getBalance());
+				System.out.println("\t \t   ACCOUNT ID:" + customer.getAccount2().getAccountID() + " BALANCE: " + balanceString2);
 			}
 		}	
 		
@@ -251,15 +254,18 @@ public class Menu {
 				accountChecker = displayAccountsAvailable(customer);
 				if(!accountChecker.equals("0 accounts")) {
 					if(accountChecker.equals("1 account")) {
-						depositDisplay(customer.getAccount1().getAccountID(), "first account", dollarAmount);
+						float newBalance = depositDisplay(customer.getAccount1().getAccountID(), "first account", customer.getAccount1().getBalance(), dollarAmount, false);
+						customer.getAccount1().setBalance(newBalance);
 					}
 					else if(accountChecker.equals("2 accounts")) {
 						chooseBetweenAccounts();
 						if(selectedChoice.equals("1")) {
-							depositDisplay(customer.getAccount1().getAccountID(), "first account", dollarAmount);
+							float newBalance = depositDisplay(customer.getAccount1().getAccountID(), "first account", customer.getAccount1().getBalance(), dollarAmount, false);
+							customer.getAccount1().setBalance(newBalance);
 						}
 						else if(selectedChoice.equals("2")) {
-							depositDisplay(customer.getAccount2().getAccountID(), "second account", dollarAmount);
+							float newBalance = depositDisplay(customer.getAccount2().getAccountID(), "second account", customer.getAccount2().getBalance(), dollarAmount, false);
+							customer.getAccount2().setBalance(newBalance);
 						}		
 					}
 				}
@@ -268,23 +274,62 @@ public class Menu {
 					accountChecker = displayAccountsAvailable(customer);
 					if(!accountChecker.equals("0 accounts")) {
 						if(accountChecker.equals("1 account")) {
-							withdrawDisplay(customer.getAccount1().getAccountID(), "first account", dollarAmount,
-									customer.getAccount1().getBalance());
+							float newBalance = withdrawDisplay(customer.getAccount1().getAccountID(), "first account", dollarAmount,
+									customer.getAccount1().getBalance(), false);
+							customer.getAccount1().setBalance(newBalance);
+							
 						}
 						else if(accountChecker.equals("2 accounts")) {
 							chooseBetweenAccounts();
 							if(selectedChoice.equals("1")) {
-								withdrawDisplay(customer.getAccount1().getAccountID(), "first account", dollarAmount,
-										customer.getAccount1().getBalance());
+								float newBalance = withdrawDisplay(customer.getAccount1().getAccountID(), "first account", dollarAmount,
+										customer.getAccount1().getBalance(), false);
+								customer.getAccount1().setBalance(newBalance);
 							}
 							else if(selectedChoice.equals("2")) {
-								withdrawDisplay(customer.getAccount2().getAccountID(), "second account", dollarAmount,
-										customer.getAccount2().getBalance());
+								float newBalance = withdrawDisplay(customer.getAccount2().getAccountID(), "second account", dollarAmount,
+										customer.getAccount2().getBalance(), false);
+								customer.getAccount2().setBalance(newBalance);
 							}		
 						}
 					}	
 				break;
 			case "t":
+				if(customer.getAccount1()== null && customer.getAccount2()== null) {
+					System.out.println("Sorry but you don't have 2 accounts to transfer money between ");
+				}
+				else {
+					System.out.println("Please enter what accont you want to pull money from to deposit into the other");
+					chooseBetweenAccounts();
+					String dollarAmountString;
+					if(selectedChoice.equals("1")) {
+						System.out.println("Enter how much you want to take out of acccount 1 ");
+						dollarAmount = validateMoneyValue();
+						float newBalance1 = withdrawDisplay(customer.getAccount1().getAccountID(), "", dollarAmount, customer.getAccount1().getBalance(), true);
+						customer.getAccount1().setBalance(newBalance1);
+						float newBalance2 = depositDisplay(customer.getAccount2().getAccountID(), "second account", customer.getAccount2().getBalance(), dollarAmount, true);
+						customer.getAccount2().setBalance(newBalance2);
+						String newBalanceString1 = String.format("%.2f", newBalance1);
+						String newBalanceString2 = String.format("%.2f", newBalance2);
+						System.out.println("Fist Account Current balance " + newBalanceString1);
+						System.out.println("Second Account Current balance " + newBalanceString2);
+						
+					}
+					else {
+						System.out.println("Enter how much you want to take out of acccount 2 ");
+						dollarAmount = validateMoneyValue();
+						float newBalance1 = withdrawDisplay(customer.getAccount2().getAccountID(), "", dollarAmount, customer.getAccount2().getBalance(), true);
+						customer.getAccount2().setBalance(newBalance1);
+						float newBalance2 = depositDisplay(customer.getAccount1().getAccountID(), "first account", customer.getAccount1().getBalance(), dollarAmount, true);
+						customer.getAccount1().setBalance(newBalance2);
+						dollarAmountString = String.format("%.2f", dollarAmount);
+						String newBalanceString1 = String.format("%.2f", newBalance1);
+						String newBalanceString2 = String.format("%.2f", newBalance2);
+						System.out.println("Second Account Current balance " + newBalanceString1);
+						System.out.println("First Account Current balance " + newBalanceString2);
+
+					}
+				}
 				break;
 			case "s":
 				if(admin == false) {
@@ -344,20 +389,45 @@ public class Menu {
 			selectedChoice = s1.nextLine();
 		}while(!selectedChoice.equals("1") && !selectedChoice.equals("2"));
 	}
-	public void depositDisplay(int accountID, String depositMessage, float dollarAmount) {
-		dollarAmount = validateMoneyValue();
+	public float depositDisplay(int accountID, String accountString, float balanceAmount, float dollarAmount, boolean transferOption) {
+		if(!transferOption) {
+			dollarAmount = validateMoneyValue();
+		}
 		bankDAO.deposit(dollarAmount, accountID);
-		System.out.println("You despoited " + dollarAmount + " into your first account");
+		String dollarAmountString = String.format("%.2f", dollarAmount);
+		if(transferOption == false) {
+			
+			String currentBalanceString = String.format("%.2f", balanceAmount +dollarAmount);
+			System.out.println("You despoited " + dollarAmount + " into your " + accountString + "\n Current Balance: " + currentBalanceString);
+		}
+		else {
+			if(accountString.equals("second account")) {
+				System.out.println("You transfered $" + dollarAmountString + " from the first account to the second account ");	
+			}
+			else {
+				System.out.println("You transfered $" + dollarAmountString + " from the second account to the first account ");
+			}
+		}
+		return (balanceAmount + dollarAmount);
 	}
-	public void withdrawDisplay(int accountID, String accountString, float dollarAmount, float balanceAmount) {
-		dollarAmount = validateMoneyValue();
+	public float withdrawDisplay(int accountID, String accountString, float dollarAmount, float balanceAmount, boolean transferOption) {
+		if(!transferOption)
+		{
+			dollarAmount = validateMoneyValue();
+		}
 		if(balanceAmount - dollarAmount < 0) {
 			System.out.println("The amount requested to draw exceeds more than the money currently available in this account!");
 		}
 		else {
 			bankDAO.withdraw((balanceAmount - dollarAmount), accountID);
-			System.out.println("You withdrew " + dollarAmount + "from your " + accountString);
+			if(transferOption == false) {
+				String dollarAmountString = String.format("%.2f", dollarAmount);
+				String currentBalanceString = String.format("%.2f", balanceAmount- dollarAmount);
+				System.out.println("You withdrew $" + dollarAmountString + " from your " + accountString + "\n Current Balance: " + currentBalanceString);
+			}
+			
 		}
+		return (balanceAmount - dollarAmount);
 		
 	}
 	public void processApplicationMenu(Application application) {
