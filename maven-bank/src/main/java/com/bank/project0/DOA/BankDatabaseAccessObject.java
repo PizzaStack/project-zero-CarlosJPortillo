@@ -125,6 +125,8 @@ public class BankDatabaseAccessObject {
 	public boolean checkIfAccountExists(int accountId) {
 		sql = "Select customers.firstname, customers.lastname, accounts.accountholder1, accounts.accountholder2  from"
 				+ " accounts inner join customers on \r\n" + "customers.account1_id = accounts.account_id  \r\n" + 
+				"where account_id = " + accountId +" union " + "Select customers.firstname, customers.lastname, accounts.accountholder1, accounts.accountholder2  from"
+				+ " accounts inner join customers on \r\n" + "customers.account2_id = accounts.account_id  \r\n" + 
 				"where account_id = " + accountId +";";
 		try {
 			resultSet = statement.executeQuery(sql);
@@ -154,12 +156,12 @@ public class BankDatabaseAccessObject {
 	}
 	public Customer getCustomerInformation(int customerID) {
 		sql = "Select * from customers where customer_id = " + customerID + " order by customer_id;";
+		Customer customer = null;
 		try {
 			resultSet = statement.executeQuery(sql);
 			int count = 0;
 			while(resultSet.next()) {
 				count++;
-				Customer customer;
 				int accountNumber1 = resultSet.getInt(7);
 				int accountNumber2 = resultSet.getInt(8);
 				customer = new Customer(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4),
@@ -178,8 +180,6 @@ public class BankDatabaseAccessObject {
 						accountResultSet.next();
 						account1 = new Account(accountResultSet.getInt(1), accountResultSet.getFloat(2), accountResultSet.getInt(3), 
 								accountResultSet.getInt(4));
-						accountResultSet.close();
-						accountResultSet = null;
 					}
 					if(accountNumber2!= 0) {
 						
@@ -194,14 +194,13 @@ public class BankDatabaseAccessObject {
 					customer.setAccount2(account2);
 					
 				}
-				
-				return customer;
+				break;
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+		return customer;
 	}
 	
 	public void createCustomerAccount(Application application, int maxID, int accountID) {
@@ -316,8 +315,13 @@ public class BankDatabaseAccessObject {
 		return 0;
 	}
 
-	public void addAccountToCustomer(int customerID, int accountMaxID) {
-		sql = "update customers set account2_id = " + accountMaxID + "where customer_id = " + customerID + ";";
+	public void addAccountToCustomer(int customerID, int accountMaxID, boolean activeAccount) {
+		if(activeAccount) {
+			sql = "update customers set account2_id = " + accountMaxID + "where customer_id = " + customerID + ";";
+		}
+		else {
+			sql = "update customers set account1_id = " + accountMaxID + "where customer_id = " + customerID + ";";
+		}
 		try {
 			statement.executeUpdate(sql);
 			logger.debug("Added a bank account to customer: " + customerID);
@@ -338,5 +342,44 @@ public class BankDatabaseAccessObject {
 			e.printStackTrace();
 		}
 	}
+	public void callableDeleteAccount(int accountID) {
+		try {
+			CallableStatement stmt = connection.prepareCall("{call deleteaccount(?)}");
+			stmt.setInt(1, accountID);
+			stmt.execute();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
+	public void callableUpdateCustomerAfterDeletedAccount(int accountID) {
+		try {
+			CallableStatement stmt = connection.prepareCall("{call updateCustomersAfterdeletedAccount(?)}");
+			stmt.setInt(1, accountID);
+			stmt.execute();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public boolean checkActiveAccount(int customerID) {
+		sql = "select account1_id from customers where customer_id = " + customerID;
+		boolean activeAccount = false;
+		try {
+			resultSet = statement.executeQuery(sql);
+			if(resultSet.next()) {
+				activeAccount = resultSet.getInt(1) > 0;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return activeAccount;
+	}
+		
 }
+	
+
+

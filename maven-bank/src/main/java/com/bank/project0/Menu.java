@@ -30,7 +30,6 @@ public class Menu {
 				try {
 					int id = (int)validateNumberInput("Please enter your employee ID number, use only whole numbers?");
 					System.out.println("Please enter the password associated with this ID number");
-					s1.nextLine();
 					String password = s1.nextLine();
 					employee = bankDAO.getEmployeeInformation(id, password);
 					if(employee == null) {
@@ -72,7 +71,6 @@ public class Menu {
 				int customerID = (int)validateNumberInput("Please enter your customer id number");
 				int socialSecurityNumber = (int)validateNumberInput("Please enter your social security number");
 				if(bankDAO.validateUser(customerID, socialSecurityNumber)) {
-					s1.nextLine();
 					Customer customer = bankDAO.getCustomerInformation(customerID);
 					printCustomerInformation(customer);
 					printCustomerAdminAccountOptions(customer, false);
@@ -102,6 +100,9 @@ public class Menu {
 					for(Application application: applications){
 						System.out.print("APPLICATION ID:: "+ application.getAppID() + " FIRST NAME:: " + application.getFirstName() + " LAST NAME:: " + 
 					    application.getLastName() + " ADDRESS:: " + application.getAddress() + "SOCIAL SECURITY #:: " + application.getSocialSecurityNum());
+						if(application.getSharedAccountRequestedID()!= 0) {
+							System.out.print(" REQUESTED SHARED ACCOUNT ID:: " + application.getSharedAccountRequestedID());
+						}
 						if(application.getNewCustomerAccount().equals("t")) {
 							System.out.print("***New Customer Request***");
 						}
@@ -113,7 +114,6 @@ public class Menu {
 					selectedChoice = s1.nextLine().toLowerCase();
 					while(selectedChoice.equals("y") && !applications.isEmpty()) {
 						applicationID = (int)validateNumberInput("Enter the application id of the application you wish to approve or reject");
-						s1.nextLine();
 						Application applicationChosen = null;
 						for(Application application: applications) {
 							if(application.getAppID() == applicationID) {
@@ -142,11 +142,13 @@ public class Menu {
 								}
 								else if(applicationChosen.getNewCustomerAccount().equals("f")) {
 									int customerID = bankDAO.getCustomerId(applicationChosen.getSocialSecurityNum());
+									boolean activeAccount= bankDAO.checkActiveAccount(customerID);
 									if(applicationChosen.getSharedAccountRequestedID() == 0) {
 										bankDAO.createBankAccount(accountMaxID, customerID, 0);
-										bankDAO.addAccountToCustomer(customerID, accountMaxID);
+										bankDAO.addAccountToCustomer(customerID, accountMaxID, activeAccount);
 									}
 									else {
+										bankDAO.addAccountToCustomer(customerID, applicationChosen.getSharedAccountRequestedID(), activeAccount);
 										bankDAO.addCustomerToAccount(applicationChosen.getSharedAccountRequestedID(), customerID);
 										
 									}
@@ -179,7 +181,7 @@ public class Menu {
 			}
 			else {
 				printCustomerInformation(customer);
-				if(employee.getAdminPriveleges().equals("true")) {
+				if(employee.getAdminPriveleges().equals("t")) {
 					printCustomerAdminAccountOptions(customer, true);
 				}
 			}
@@ -204,13 +206,11 @@ public class Menu {
 		System.out.println("Please enter your address");
 		address = s1.nextLine();
 		socialSecurityNum = (int) validateNumberInput("Please enter your social security number with no dashes or spaces");
-		s1.nextLine();
 		phoneNumber = validateNumberInput("Please enter your phone number with no dashes or spaces");
-		s1.nextLine();
 
 	//1phoneNum = s1.nextInt();
 		
-		return new Application(firstName, lastName, address, socialSecurityNum, phoneNumber, "0");
+		return new Application(firstName, lastName, address, socialSecurityNum, phoneNumber, "1");
 	}
 	public long validateNumberInput(String stringMessage) {
 		long value = 0;
@@ -221,6 +221,7 @@ public class Menu {
 						
 		}
 		value = s1.nextLong();
+		s1.nextLine();
 		return value;		
 	}
 	public void printCustomerInformation(Customer customer) {
@@ -244,7 +245,7 @@ public class Menu {
 		while(true) {
 			float dollarAmount = 0.00f;
 			String accountChecker = "";
-			System.out.println("Enter an option \n D: Deposit Money \n W: Withdraw Money \n T: Transfer Money ");
+			System.out.println("Enter an option \n D: Deposit Money \n W: Withdraw Money \n T: Transfer Money \n C: Cancel an account");
 			if(admin == false) {
 				System.out.println(" S: Submit new Application");
 			}
@@ -333,10 +334,40 @@ public class Menu {
 				break;
 			case "s":
 				if(admin == false) {
-					if(customer.getAccount1()!= null && customer.getAccount2()!= null) {
+					if(customer.getAccount2()== null) {
 						Application application = new Application(customer.getFirstName(), customer.getLastName(), customer.getAddress(), customer.getSocialSecurityNum(),
 								customer.getPhoneNumber(), "0");
 						processApplicationMenu(application);
+					}
+					else {
+						System.out.println("You already have 2 active acccounts associated with this customer, cannot submit another application to create another account");
+					}
+				}
+				break;
+			case "c":
+				if(admin == true) {
+					if(customer.getAccount1()== null && customer.getAccount2()== null) {
+						System.out.println("There are no active accouts associated with this customer");
+					}
+					else {
+						if(customer.getAccount1()!= null && customer.getAccount2() == null) {
+							System.out.println("Do you want to delete the only account active with this customer? \n Enter Y for yes \n Enter anything else for no");
+							selectedChoice = s1.nextLine();
+							if(selectedChoice.equals("y")) {
+								bankDAO.callableDeleteAccount(customer.getAccount1().getAccountID());
+								bankDAO.callableUpdateCustomerAfterDeletedAccount(customer.getAccount1().getAccountID());
+								customer.setAccount1(null);
+							}
+						}
+						else {
+							System.out.println("Please enter what account you want to delete from \n Enter either 1 or 2 as your response");
+							chooseBetweenAccounts();
+							if(selectedChoice.equals("1")) {
+								bankDAO.callableDeleteAccount(customer.getAccount1().getAccountID());
+								
+							}
+						}
+						}
 					}
 				}
 				break;
@@ -347,7 +378,6 @@ public class Menu {
 				return;
 			}
 		}	
-	}
 	public float validateMoneyValue() {
 		float myFloat;
 		while (true) {
@@ -442,7 +472,6 @@ public class Menu {
 			while(accountExists == false) {
 				sharedAccountNumber = (int)validateNumberInput("Please enter the account number asscociated to the account you "
 						+ "wish to be shared with, use numbers only");
-				s1.nextLine();
 				accountExists = bankDAO.checkIfAccountExists(sharedAccountNumber);
 				
 				if(accountExists == false) {
