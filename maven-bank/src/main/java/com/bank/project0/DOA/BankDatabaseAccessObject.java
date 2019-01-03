@@ -263,8 +263,13 @@ public class BankDatabaseAccessObject {
 		
 	}
 
-	public boolean validateUser(int customerID, int socialSecurityNumber ) {
-		sql = "Select * from customers where customer_id = " + customerID + " and socialnumber = " + socialSecurityNumber + ";";
+	public boolean validateUser(int customerID, int socialSecurityNumber, boolean newCustomer ) {
+		if(newCustomer) {
+			sql = "Select * from customers where socialnumber = " + socialSecurityNumber + ";";
+		}
+		else {
+			sql = "Select * from customers where customer_id = " + customerID + " and socialnumber = " + socialSecurityNumber + ";";
+		}
 		try {
 			resultSet = statement.executeQuery(sql);
 			if(resultSet.next()) {

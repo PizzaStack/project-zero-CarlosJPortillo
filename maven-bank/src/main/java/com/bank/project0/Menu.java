@@ -65,13 +65,16 @@ public class Menu {
 				return;
 			}
 			Application application = CreateCustomerApplication();
-			processApplicationMenu(application);				
+			if(application!= null) {
+				processApplicationMenu(application);
+			}
+							
 		}
 		else if(selectedChoice.equals("n")) {
 			try {
 				int customerID = (int)validateNumberInput("Please enter your customer id number");
 				int socialSecurityNumber = (int)validateNumberInput("Please enter your social security number");
-				if(bankDAO.validateUser(customerID, socialSecurityNumber)) {
+				if(bankDAO.validateUser(customerID, socialSecurityNumber, false)) {
 					Customer customer = bankDAO.getCustomerInformation(customerID);
 					printCustomerInformation(customer);
 					printCustomerAdminAccountOptions(customer, false);
@@ -212,7 +215,13 @@ public class Menu {
 		System.out.println("Please enter your address");
 		address = s1.nextLine();
 		socialSecurityNum = (int) validateNumberInput("Please enter your social security number with no dashes or spaces");
+		boolean flag = bankDAO.validateUser(0, socialSecurityNum, true);
+		if(flag == true) {
+			System.out.println("Sorry, it appears that social security number belongs to somebody else in the database");
+			return null;
+		}
 		phoneNumber = validateNumberInput("Please enter your phone number with no dashes or spaces");
+		
 
 	//1phoneNum = s1.nextInt();
 		
