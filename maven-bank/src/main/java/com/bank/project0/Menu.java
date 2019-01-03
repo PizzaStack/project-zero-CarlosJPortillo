@@ -242,7 +242,7 @@ public class Menu {
 		
 	}
 	public void printCustomerAdminAccountOptions(Customer customer, boolean admin) {
-		while(true) {
+		do{
 			float dollarAmount = 0.00f;
 			String accountChecker = "";
 			System.out.println("Enter an option \n D: Deposit Money \n W: Withdraw Money \n T: Transfer Money \n C: Cancel an account");
@@ -364,19 +364,24 @@ public class Menu {
 							chooseBetweenAccounts();
 							if(selectedChoice.equals("1")) {
 								bankDAO.callableDeleteAccount(customer.getAccount1().getAccountID());
+								bankDAO.callableUpdateCustomerAfterDeletedAccount(customer.getAccount1().getAccountID());
+								customer.setAccount1(null);
 								
+							}
+							else if(selectedChoice.equals("2")) {
+								bankDAO.callableDeleteAccount(customer.getAccount2().getAccountID());
+								bankDAO.callableUpdateCustomerAfterDeletedAccount(customer.getAccount2().getAccountID());
+								customer.setAccount2(null);
 							}
 						}
 						}
 					}
 				}
-				break;
-			}
-			System.out.println("Do you wish to exit this menu screen? \n Enter Y to exit and return back to the previous screen");
-			s1.nextLine().toLowerCase();
-			if(selectedChoice.equals("y")) {
-				return;
-			}
+				System.out.println("Do you wish to exit this menu screen? \n Enter Y to stay on this menu \n Enter any other key to return back to the "
+						+ "main menu screen");
+				selectedChoice = s1.nextLine().toLowerCase();
+			}while(selectedChoice.equals("y"));
+
 		}	
 	public float validateMoneyValue() {
 		float myFloat;
