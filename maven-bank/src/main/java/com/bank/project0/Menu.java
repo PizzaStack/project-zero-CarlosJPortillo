@@ -44,6 +44,7 @@ public class Menu {
 				}	
 				break;
 			case "3":
+				bankDAO.closeConnection();
 				return true;
 		
 			default: 
@@ -184,9 +185,14 @@ public class Menu {
 				if(employee.getAdminPriveleges().equals("t")) {
 					printCustomerAdminAccountOptions(customer, true);
 				}
-			}
-					
+				else {
+					System.out.println("Do you wish to exit this menu screen? \n Enter Y to stay on this menu \n Enter any other key to return back to the "
+							+ "main menu screen");
+					selectedChoice = s1.nextLine().toLowerCase();
+				}
+			}		
 		}
+			
 		}while(selectedChoice.equals("y"));
 	}
 	public void printAdminOptions() {
@@ -245,9 +251,12 @@ public class Menu {
 		do{
 			float dollarAmount = 0.00f;
 			String accountChecker = "";
-			System.out.println("Enter an option \n D: Deposit Money \n W: Withdraw Money \n T: Transfer Money \n C: Cancel an account");
+			System.out.println("Enter an option \n D: Deposit Money \n W: Withdraw Money \n T: Transfer Money");
 			if(admin == false) {
 				System.out.println(" S: Submit new Application");
+			}
+			else if(admin == true) {
+				System.out.println(" C: Cancel an account");
 			}
 			selectedChoice = s1.nextLine().toLowerCase();
 			switch(selectedChoice) {
@@ -296,7 +305,7 @@ public class Menu {
 					}	
 				break;
 			case "t":
-				if(customer.getAccount1()== null && customer.getAccount2()== null) {
+				if(customer.getAccount1()== null || customer.getAccount2()== null) {
 					System.out.println("Sorry but you don't have 2 accounts to transfer money between ");
 				}
 				else {
@@ -352,10 +361,11 @@ public class Menu {
 					else {
 						if(customer.getAccount1()!= null && customer.getAccount2() == null) {
 							System.out.println("Do you want to delete the only account active with this customer? \n Enter Y for yes \n Enter anything else for no");
-							selectedChoice = s1.nextLine();
+							selectedChoice = s1.nextLine().toLowerCase();
 							if(selectedChoice.equals("y")) {
 								bankDAO.callableDeleteAccount(customer.getAccount1().getAccountID());
 								bankDAO.callableUpdateCustomerAfterDeletedAccount(customer.getAccount1().getAccountID());
+								System.out.println("Bank account: " + customer.getAccount1().getAccountID() + " has been terminated");
 								customer.setAccount1(null);
 							}
 						}
@@ -365,12 +375,15 @@ public class Menu {
 							if(selectedChoice.equals("1")) {
 								bankDAO.callableDeleteAccount(customer.getAccount1().getAccountID());
 								bankDAO.callableUpdateCustomerAfterDeletedAccount(customer.getAccount1().getAccountID());
-								customer.setAccount1(null);
+								System.out.println("Bank account: " + customer.getAccount1().getAccountID() + " has been terminated");
+								customer.setAccount1(customer.getAccount2());
+								customer.setAccount2(null);
 								
 							}
 							else if(selectedChoice.equals("2")) {
 								bankDAO.callableDeleteAccount(customer.getAccount2().getAccountID());
 								bankDAO.callableUpdateCustomerAfterDeletedAccount(customer.getAccount2().getAccountID());
+								System.out.println("Bank account: " + customer.getAccount2().getAccountID() + " has been terminated");
 								customer.setAccount2(null);
 							}
 						}

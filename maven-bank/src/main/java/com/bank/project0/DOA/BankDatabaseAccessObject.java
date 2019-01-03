@@ -132,7 +132,7 @@ public class BankDatabaseAccessObject {
 			resultSet = statement.executeQuery(sql);
 			if(resultSet.next()) {
 				if(resultSet.getInt(3)!= 0 && resultSet.getInt(4)!= 0) {
-					System.out.println("This account already belongs to somebody!");
+					System.out.println("This account already belongs to two people!");
 				}
 				else{
 					String selectedChoice;
@@ -141,10 +141,10 @@ public class BankDatabaseAccessObject {
 					Scanner s2 = new Scanner(System.in);
 					selectedChoice = s2.nextLine().toLowerCase();
 					if(selectedChoice.equals("y")) {
-						s2.close();
+				
 						return true;
 					}
-					s2.close();
+					
 					return false;
 				}			
 			}

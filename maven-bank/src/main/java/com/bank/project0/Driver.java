@@ -5,14 +5,14 @@ public class Driver {
 	
 	public static void main(String[] args) {
 		Menu menu = new Menu();
-		boolean cont = true;
+		boolean cont = false;
 		
-		while(!false) {
+		while(cont != true) {
 			menu.printMenu();
 			cont = menu.getChoice();
 		}
 		
-		
+		System.out.println("You have exited the application. Have a nice day!");
 	}
 	
 }
